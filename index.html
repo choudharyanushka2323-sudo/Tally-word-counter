@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tally — Word &amp; Character Counter</title>
+<meta name="description" content="A clean, instant word and character counter. No sign-up, no ads, just the count." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FAF8F3;
+    --paper-raised: #FFFFFF;
+    --ink: #1A1A18;
+    --ink-soft: #4A4842;
+    --muted: #8A867C;
+    --umber: #8B5A2B;
+    --umber-dim: #B8895C;
+    --warn: #C44536;
+    --rule: #E4DFD3;
+    --rule-soft: #EFEBE1;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 60px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    padding: 36px 0 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .wordmark {
+    font-family: 'Source Serif 4', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .wordmark span {
+    color: var(--umber);
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  main {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  /* ---- Hero count ---- */
+  .count-stage {
+    text-align: center;
+    padding: 28px 0 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .count-number {
+    font-family: 'Source Serif 4', serif;
+    font-size: clamp(64px, 18vw, 128px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    transition: color 0.4s ease, font-weight 0.2s ease;
+  }
+
+  .count-number.is-active {
+    color: var(--umber);
+  }
+
+  .count-number.is-over {
+    color: var(--warn);
+  }
+
+  .count-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ---- Mode toggle ---- */
+  .mode-toggle {
+    display: inline-flex;
+    margin-top: 18px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-raised);
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .mode-toggle button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    padding: 7px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .mode-toggle button.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ---- Textarea ---- */
+  .editor-wrap {
+    margin-top: 28px;
+    position: relative;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 260px;
+    resize: vertical;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px 22px;
+    font-family: 'Source Serif 4', serif;
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(26,26,24,0.03);
+    transition: border-color 0.2s ease;
+  }
+
+  textarea::placeholder {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--umber);
+  }
+
+  textarea:focus-visible {
+    outline: 2px solid var(--umber);
+    outline-offset: 2px;
+  }
+
+  /* ---- Limit row ---- */
+  .limit-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .limit-row label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .limit-row input {
+    width: 76px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    color: var(--ink);
+  }
+
+  .limit-row input:focus {
+    outline: none;
+    border-color: var(--umber);
+  }
+
+  /* ---- Stats grid ---- */
+  .stats {
+    margin-top: 36px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+
+  .stat {
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 14px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  @media (max-width: 540px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---- Actions ---- */
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 9px 18px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--paper-raised);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .btn:hover {
+    border-color: var(--umber-dim);
+    color: var(--umber);
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--umber);
+    outline-offset: 2px;
+  }
+
+  /* ---- Footer / credit ---- */
+  footer {
+    width: 100%;
+    max-width: 720px;
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .author-line {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .author-line strong {
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .author-line a {
+    color: var(--umber);
+    text-decoration: none;
+  }
+
+  .author-line a:hover {
+    text-decoration: underline;
+  }
+
+  .built-for-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 9px 16px;
+    border-radius: 4px;
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+
+  .built-for-btn:hover {
+    background: var(--umber);
+  }
+
+  .built-for-btn:focus-visible {
+    outline: 2px solid var(--umber);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">Tally<span>.</span></div>
+  <div class="tagline" id="clock"></div>
+</header>
+
+<main>
+  <section class="count-stage">
+    <div class="count-number" id="primaryCount">0</div>
+    <div class="count-label" id="primaryLabel">words</div>
+
+    <div class="mode-toggle" role="group" aria-label="Count mode">
+      <button type="button" class="active" data-mode="words">Words</button>
+      <button type="button" data-mode="chars">Characters</button>
+    </div>
+  </section>
+
+  <div class="editor-wrap">
+    <label for="text" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Your text</label>
+    <textarea id="text" placeholder="Start typing, or paste your text here — your tweet, bio, essay, caption, whatever needs counting…" autofocus></textarea>
+  </div>
+
+  <div class="limit-row">
+    <label for="limit">Limit (optional)</label>
+    <input type="number" id="limit" min="0" placeholder="e.g. 280" />
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="statWords">0</div>
+      <div class="stat-name">Words</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statChars">0</div>
+      <div class="stat-name">Characters</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statSentences">0</div>
+      <div class="stat-name">Sentences</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statReading">0:00</div>
+      <div class="stat-name">Reading time</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="copyBtn" type="button">Copy text</button>
+    <button class="btn" id="clearBtn" type="button">Clear</button>
+  </div>
+</main>
+
+<footer>
+  <div class="author-line">
+    Built by <strong>YOUR FULL NAME</strong> — <a href="mailto:your.email@example.com">your.email@example.com</a><br>
+    A free counter for anyone who's stared at a character limit too long.
+  </div>
+  <a class="built-for-btn" href="https://digitalheroesco.com" target="_blank" rel="noopener noreferrer">Built for Digital Heroes →</a>
+</footer>
+
+<script>
+  const textEl = document.getElementById('text');
+  const primaryCount = document.getElementById('primaryCount');
+  const primaryLabel = document.getElementById('primaryLabel');
+  const limitInput = document.getElementById('limit');
+  const modeButtons = document.querySelectorAll('.mode-toggle button');
+  const clockEl = document.getElementById('clock');
+
+  const statWords = document.getElementById('statWords');
+  const statChars = document.getElementById('statChars');
+  const statSentences = document.getElementById('statSentences');
+  const statReading = document.getElementById('statReading');
+
+  let mode = 'words'; // 'words' | 'chars'
+
+  function countWords(str) {
+    const trimmed = str.trim();
+    if (trimmed === '') return 0;
+    return trimmed.split(/\s+/).length;
+  }
+
+  function countSentences(str) {
+    const trimmed = str.trim();
+    if (trimmed === '') return 0;
+    const matches = trimmed.match(/[^.!?]+[.!?]+/g);
+    if (matches) return matches.length;
+    return trimmed.length > 0 ? 1 : 0;
+  }
+
+  function formatReadingTime(words) {
+    const wordsPerMinute = 200;
+    const totalSeconds = Math.round((words / wordsPerMinute) * 60);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function update() {
+    const text = textEl.value;
+    const words = countWords(text);
+    const chars = text.length;
+    const sentences = countSentences(text);
+
+    statWords.textContent = words.toLocaleString();
+    statChars.textContent = chars.toLocaleString();
+    statSentences.textContent = sentences.toLocaleString();
+    statReading.textContent = formatReadingTime(words);
+
+    const primaryValue = mode === 'words' ? words : chars;
+    primaryCount.textContent = primaryValue.toLocaleString();
+    primaryLabel.textContent = mode === 'words' ? 'words' : 'characters';
+
+    // active / breathing state
+    primaryCount.classList.toggle('is-active', text.length > 0);
+
+    // limit check
+    const limit = parseInt(limitInput.value, 10);
+    if (!isNaN(limit) && limit > 0) {
+      primaryCount.classList.toggle('is-over', primaryValue > limit);
+    } else {
+      primaryCount.classList.remove('is-over');
+    }
+  }
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      update();
+    });
+  });
+
+  textEl.addEventListener('input', update);
+  limitInput.addEventListener('input', update);
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    textEl.value = '';
+    limitInput.value = '';
+    textEl.focus();
+    update();
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('copyBtn');
+    try {
+      await navigator.clipboard.writeText(textEl.value);
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (e) {
+      const original = btn.textContent;
+      btn.textContent = 'Press Ctrl+C';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    }
+  });
+
+  // small ambient clock in header, ties the tool to "real time" without being a gimmick
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    clockEl.textContent = h + ':' + m;
+  }
+  updateClock();
+  setInterval(updateClock, 1000 * 30);
+
+  update();
+</script>
+
+</body>
+</html>
