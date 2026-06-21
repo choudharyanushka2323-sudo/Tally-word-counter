@@ -30,4 +30,4 @@ This project was built as part of the Digital Heroes developer trial task.
 ## Author
 
 Anushka choudhary
-choudharyanushka2323@gmail.com
+choudharyanushka2323@gmail.com 
